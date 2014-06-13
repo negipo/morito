@@ -26,7 +26,8 @@ client.allowed?('http://example.com/some/path', cache: false) # => true / false 
 
 ## TODO
 
-- Currently does not handle `Allow:` description.
+- Handle `Allow:` description.
+- Pattern matching like `Disallow: /*?`
 
 ## Contributing
 
