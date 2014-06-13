@@ -41,7 +41,7 @@ module Morito
     end
 
     class LineParser
-      attr_reader :user_agent, :disallow
+      attr_reader :user_agent
 
       def parse(line)
         case line
@@ -53,6 +53,10 @@ module Morito
         else
           @disallow = nil
         end
+      end
+
+      def disallow
+        Regexp.escape(@disallow).gsub('\*', '.*').gsub('\$', '$')
       end
 
       def disallow?

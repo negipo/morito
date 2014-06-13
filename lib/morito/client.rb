@@ -9,10 +9,18 @@ module Morito
     def allowed?(requesting_url, cache: true)
       uri = URI.parse(requesting_url)
       robots_txt_body = robots_txt_body(uri, cache: cache)
-      Morito::Processor.new(robots_txt_body).allowed?(@user_agent, uri.path)
+      Morito::Processor.new(robots_txt_body).allowed?(@user_agent, path(uri))
     end
 
     private
+
+    def path(uri)
+      if uri.query
+        "#{uri.path}?#{uri.query}"
+      else
+        uri.path
+      end
+    end
 
     def robots_txt_body(uri, cache: true)
       if cache

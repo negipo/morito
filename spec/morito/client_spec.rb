@@ -13,6 +13,7 @@ describe Morito::Client do
         <<-EOS
 User-agent: *
 Disallow: /private
+Disallow: /*?$
 
 # Comment
 User-agent: restricted agent # Comment
@@ -62,6 +63,20 @@ EOS
 
         context 'with allowed agent' do
           let(:user_agent) { 'allowed agent' }
+          it { should == true }
+        end
+      end
+
+      context 'with patternized path' do
+        let(:user_agent) { 'some agent' }
+
+        context 'for eol' do
+          let(:requesting_url) { 'http://example.com/some/path?' }
+          it { should == false }
+        end
+
+        context 'for no eol' do
+          let(:requesting_url) { 'http://example.com/some/path?param=1' }
           it { should == true }
         end
       end
