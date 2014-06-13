@@ -24,10 +24,6 @@ client.allowed?('http://example.com/some/path') # => true / false
 client.allowed?('http://example.com/some/path', cache: false) # => true / false without cache
 ```
 
-## TODO
-
-- Handle `Allow:` description.
-
 ## Contributing
 
 1. Fork it ( https://github.com/negipo/morito/fork )
