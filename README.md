@@ -1,4 +1,4 @@
-# Morito
+# Morito [![Build Status](https://travis-ci.org/negipo/morito.svg?branch=master)](https://travis-ci.org/negipo/morito)
 
 A client to handle robots.txt
 
