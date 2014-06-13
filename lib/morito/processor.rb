@@ -19,7 +19,12 @@ module Morito
 
     def disallows_for(user_agent)
       build
-      @disallows['*'] + @disallows[user_agent]
+
+      if !@disallows[user_agent].empty?
+        @disallows[user_agent]
+      else
+        @disallows['*']
+      end
     end
 
     def build

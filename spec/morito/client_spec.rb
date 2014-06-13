@@ -17,6 +17,9 @@ Disallow: /private
 # Comment
 User-agent: restricted agent # Comment
 Disallow: /
+
+User-agent: allowed agent
+Disallow: /super_private
 EOS
       end
 
@@ -55,6 +58,11 @@ EOS
         context 'with restricted agent' do
           let(:user_agent) { 'restricted agent' }
           it { should == false }
+        end
+
+        context 'with allowed agent' do
+          let(:user_agent) { 'allowed agent' }
+          it { should == true }
         end
       end
     end
