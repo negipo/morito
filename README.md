@@ -1,4 +1,4 @@
-# Morito [![Build Status](https://travis-ci.org/negipo/morito.svg?branch=master)](https://travis-ci.org/negipo/morito)
+# Morito [![Build Status](https://travis-ci.org/negipo/morito.svg?branch=master)](https://travis-ci.org/negipo/morito) [![Code Climate](https://codeclimate.com/github/negipo/morito.png)](https://codeclimate.com/github/negipo/morito) [![Code Climate](https://codeclimate.com/github/negipo/morito/coverage.png)](https://codeclimate.com/github/negipo/morito)
 
 A client to handle robots.txt
 
