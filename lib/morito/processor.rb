@@ -5,17 +5,48 @@ module Morito
     end
 
     def allowed?(user_agent, path)
-      disallows = disallows_for(user_agent)
-
-      if disallows.empty?
+      if !disallows_regexp(user_agent)
         true
       else
-        regexp = Regexp.new("\\A(?:#{disallows.join('|')})")
-        regexp !~ path
+        if allows_regexp(user_agent) && allows_regexp(user_agent) =~ path
+          true
+        else
+          disallows_regexp(user_agent) !~ path
+        end
       end
     end
 
     private
+
+    def allows_regexp(user_agent)
+      allows = allows_for(user_agent)
+
+      if allows.empty?
+        nil
+      else
+        Regexp.new("\\A(?:#{allows.join('|')})")
+      end
+    end
+
+    def disallows_regexp(user_agent)
+      disallows = disallows_for(user_agent)
+
+      if disallows.empty?
+        nil
+      else
+        Regexp.new("\\A(?:#{disallows.join('|')})")
+      end
+    end
+
+    def allows_for(user_agent)
+      build
+
+      if !@allows[user_agent].empty?
+        @allows[user_agent]
+      else
+        @allows['*']
+      end
+    end
 
     def disallows_for(user_agent)
       build
@@ -28,16 +59,19 @@ module Morito
     end
 
     def build
-      return if @disallows
+      return if @builded
+
       @disallows = Hash.new {|h, k| h[k] = [] }
+      @allows = Hash.new {|h, k| h[k] = [] }
 
       parser = LineParser.new
       @body.split(/\n+/).each do |line|
         parser.parse(line)
         @disallows[parser.user_agent] << parser.disallow if parser.disallow?
+        @allows[parser.user_agent] << parser.allow if parser.allow?
       end
 
-      @disallows
+      @builded = true
     end
 
     class LineParser
@@ -47,20 +81,41 @@ module Morito
         case line
         when /\AUser-agent:\s+(.+?)\s*(?:#.+)?\z/i
           @user_agent = $1
-          @disallow = nil
+          clear_permissions
         when /\ADisallow:\s+(.+?)\s*(?:#.+)?\z/i
           @disallow = $1
+        when /\AAllow:\s+(.+?)\s*(?:#.+)?\z/i
+          @allow = $1
         else
-          @disallow = nil
+          clear_permissions
         end
       end
 
+      def allow
+        pattern_for(@allow)
+      end
+
       def disallow
-        Regexp.escape(@disallow).gsub('\*', '.*').gsub('\$', '$')
+        pattern_for(@disallow)
+      end
+
+      def allow?
+        @user_agent && @allow
       end
 
       def disallow?
         @user_agent && @disallow
+      end
+
+      private
+
+      def pattern_for(string)
+        Regexp.escape(string).gsub('\*', '.*').gsub('\$', '$')
+      end
+
+      def clear_permissions
+        @disallow = nil
+        @allow = nil
       end
     end
   end

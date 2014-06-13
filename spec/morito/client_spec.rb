@@ -14,6 +14,7 @@ describe Morito::Client do
 User-agent: *
 Disallow: /private
 Disallow: /*?$
+Allow: /private/photo
 
 # Comment
 User-agent: restricted agent # Comment
@@ -63,6 +64,15 @@ EOS
 
         context 'with allowed agent' do
           let(:user_agent) { 'allowed agent' }
+          it { should == true }
+        end
+      end
+
+      context 'with private but allowed path' do
+        let(:requesting_url) { 'http://example.com/private/photo/1' }
+
+        context 'with some agent' do
+          let(:user_agent) { 'some agent' }
           it { should == true }
         end
       end
