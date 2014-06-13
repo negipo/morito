@@ -60,8 +60,6 @@ module Morito
       end
 
       def regexp(type)
-        raise ArgumentError unless @permission.keys.include?(type)
-
         raw_regexps = @permission[type].map do |permission|
           Regexp.escape(permission).gsub('\*', '.*').gsub('\$', '$')
         end
