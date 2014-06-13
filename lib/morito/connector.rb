@@ -1,11 +1,8 @@
 require 'faraday'
-require 'uri'
 
 module Morito
   class Connector
     PATH = '/robots.txt'
-
-    attr_reader :uri
 
     def initialize(uri, cache: true)
       @uri = uri

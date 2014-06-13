@@ -1,3 +1,5 @@
+require 'uri'
+
 module Morito
   class Client
     def initialize(user_agent)
