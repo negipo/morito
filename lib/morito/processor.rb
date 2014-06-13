@@ -5,98 +5,85 @@ module Morito
     end
 
     def allowed?(user_agent, path)
-      if !disallows_regexp(user_agent)
-        true
-      else
-        if allows_regexp(user_agent) && allows_regexp(user_agent) =~ path
-          true
-        else
-          disallows_regexp(user_agent) !~ path
-        end
-      end
+      UserAgentPermission.new(user_agent, whole_permission).allowed?(path)
     end
 
     private
 
-    def allows_regexp(user_agent)
-      allows = allows_for(user_agent)
+    def whole_permission
+      return @whole_permission if @whole_permission
 
-      if allows.empty?
-        nil
-      else
-        Regexp.new("\\A(?:#{allows.join('|')})")
-      end
-    end
-
-    def disallows_regexp(user_agent)
-      disallows = disallows_for(user_agent)
-
-      if disallows.empty?
-        nil
-      else
-        Regexp.new("\\A(?:#{disallows.join('|')})")
-      end
-    end
-
-    def allows_for(user_agent)
-      build
-
-      if !@allows[user_agent].empty?
-        @allows[user_agent]
-      else
-        @allows['*']
-      end
-    end
-
-    def disallows_for(user_agent)
-      build
-
-      if !@disallows[user_agent].empty?
-        @disallows[user_agent]
-      else
-        @disallows['*']
-      end
-    end
-
-    def build
-      return if @builded
-
-      @disallows = Hash.new {|h, k| h[k] = [] }
-      @allows = Hash.new {|h, k| h[k] = [] }
-
+      @whole_permission = Hash.new {|h, k| h[k] = Hash.new {|h2, k2| h2[k2] = [] } }
       parser = LineParser.new
+
       @body.split(/\n+/).each do |line|
         parser.parse(line)
-        @disallows[parser.user_agent] << parser.disallow if parser.disallow?
-        @allows[parser.user_agent] << parser.allow if parser.allow?
+        if parser.disallow?
+          @whole_permission[parser.user_agent][:disallow] << parser.disallow
+        elsif parser.allow?
+          @whole_permission[parser.user_agent][:allow] << parser.allow
+        end
       end
 
-      @builded = true
+      @whole_permission
+    end
+
+    class UserAgentPermission
+      def initialize(user_agent, whole_permission)
+        @user_agent = user_agent
+
+        if whole_permission[user_agent].empty?
+          @permission = whole_permission['*']
+        else
+          @permission = whole_permission[user_agent]
+        end
+      end
+
+      def allowed?(path)
+        return true if disallow_unavailable?
+
+        if !allow_unavailable? && regexp(:allow) =~ path
+          true
+        else
+          regexp(:disallow) !~ path
+        end
+      end
+
+      private
+
+      def allow_unavailable?
+        @permission[:allow].empty?
+      end
+
+      def disallow_unavailable?
+        @permission[:disallow].empty?
+      end
+
+      def regexp(type)
+        raise ArgumentError unless @permission.keys.include?(type)
+
+        raw_regexps = @permission[type].map do |permission|
+          Regexp.escape(permission).gsub('\*', '.*').gsub('\$', '$')
+        end
+
+        Regexp.new("\\A(?:#{raw_regexps.join('|')})")
+      end
     end
 
     class LineParser
-      attr_reader :user_agent
+      attr_reader :user_agent, :allow, :disallow
 
       def parse(line)
+        clear_permissions
+
         case line
         when /\AUser-agent:\s+(.+?)\s*(?:#.+)?\z/i
           @user_agent = $1
-          clear_permissions
         when /\ADisallow:\s+(.+?)\s*(?:#.+)?\z/i
           @disallow = $1
         when /\AAllow:\s+(.+?)\s*(?:#.+)?\z/i
           @allow = $1
-        else
-          clear_permissions
         end
-      end
-
-      def allow
-        pattern_for(@allow)
-      end
-
-      def disallow
-        pattern_for(@disallow)
       end
 
       def allow?
@@ -108,10 +95,6 @@ module Morito
       end
 
       private
-
-      def pattern_for(string)
-        Regexp.escape(string).gsub('\*', '.*').gsub('\$', '$')
-      end
 
       def clear_permissions
         @disallow = nil
